@@ -1,0 +1,11 @@
+{
+  "mcpServers": {
+    "monday-meta-ads": {
+      "command": "node",
+      "args": ["dist/mcp/server.js"],
+      "env": {
+        "PORT": "3001"
+      }
+    }
+  }
+}
