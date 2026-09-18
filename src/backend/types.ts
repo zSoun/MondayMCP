@@ -8,7 +8,8 @@ export type RechargeStatus =
 export interface ClientData {
   id: string; // Monday Item ID
   name: string; // Nome do Cliente / Empresa
-  metaAccountId: string; // ID da Conta no Meta Ads
+  person?: string; // Pessoa responsável no Monday
+  metaAccountId?: string; // ID da Conta no Meta Ads (opcional)
   monthlyBudget: number; // Orçamento Total do Mês (R$)
   dailySpend: number; // Gasto Diário Médio (R$/dia)
   lastPixDate: string; // Data do Último Pix (YYYY-MM-DD)
@@ -16,8 +17,8 @@ export interface ClientData {
   depletionDate: string; // Previsão de Esgotamento (YYYY-MM-DD)
   remainingDays: number; // Dias restantes até zerar
   status: RechargeStatus; // Etapa do Pipeline
-  pixCode: string; // Link da fatura ou Copia-e-Cola
-  notes: string; // Observações / Estratégia
+  pixCode?: string; // Link da fatura ou Copia-e-Cola (opcional)
+  notes?: string; // Observações / Estratégia (opcional)
   updatedAt?: string;
 }
 

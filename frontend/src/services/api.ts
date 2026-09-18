@@ -1,7 +1,8 @@
 export interface ClientData {
   id: string;
   name: string;
-  metaAccountId: string;
+  person?: string;
+  metaAccountId?: string;
   monthlyBudget: number;
   dailySpend: number;
   lastPixDate: string;
@@ -14,8 +15,8 @@ export interface ClientData {
     | 'Pix Gerado / Enviado ao Cliente'
     | 'Pago / Aguardando Compensação'
     | 'Saldo Confirmado';
-  pixCode: string;
-  notes: string;
+  pixCode?: string;
+  notes?: string;
   updatedAt?: string;
 }
 
@@ -246,6 +247,7 @@ export async function fetchClients(): Promise<{ clients: ClientData[]; needsConf
     const clients: ClientData[] = items.map((item: any) => {
       let metaAccountId = '';
       let monthlyBudget = 0;
+      let person = '';
       let dailySpend = 0;
       let lastPixDate = '';
       let lastPixValue = 0;
@@ -260,7 +262,9 @@ export async function fetchClients(): Promise<{ clients: ClientData[]; needsConf
         const textVal = cv.text ? cv.text.trim() : '';
         if (!textVal) continue;
 
-        if (title.includes('id da conta') || title.includes('meta')) {
+        if (title.includes('pessoa') || title.includes('people') || cv.type === 'people') {
+          person = textVal;
+        } else if (title.includes('id da conta') || title.includes('meta')) {
           metaAccountId = textVal;
         } else if (title.includes('orçamento mensal') || title.includes('orcamento')) {
           monthlyBudget = parseFloat(textVal.replace(/[^\d.-]/g, '')) || 0;
@@ -295,6 +299,7 @@ export async function fetchClients(): Promise<{ clients: ClientData[]; needsConf
       return {
         id: item.id,
         name: item.name,
+        person,
         metaAccountId,
         monthlyBudget,
         dailySpend: forecast.dailySpend,
@@ -743,16 +748,14 @@ export async function configureExistingMondayBoard(payload: { apiKey?: string; b
 
   try {
     const columnDefinitions = [
-      { title: 'ID da Conta Meta', type: 'text' },
+      { title: 'Pessoa', type: 'people' },
+      { title: 'Status da Recarga', type: 'status' },
       { title: 'Orçamento Mensal', type: 'numbers' },
       { title: 'Gasto Diário Médio', type: 'numbers' },
-      { title: 'Data do Último Pix', type: 'date' },
-      { title: 'Valor do Último Pix', type: 'numbers' },
       { title: 'Previsão de Esgotamento', type: 'date' },
       { title: 'Dias Restantes', type: 'numbers' },
-      { title: 'Status da Recarga', type: 'status' },
-      { title: 'Código / Link Pix', type: 'text' },
-      { title: 'Anotações', type: 'long_text' },
+      { title: 'Data do Último Pix', type: 'date' },
+      { title: 'Valor do Último Pix', type: 'numbers' },
     ];
 
     for (const col of columnDefinitions) {

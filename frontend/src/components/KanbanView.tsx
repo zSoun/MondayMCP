@@ -116,9 +116,13 @@ export const KanbanView: React.FC<KanbanViewProps> = ({
                     <div className="card-header">
                       <div>
                         <div className="client-name">{client.name}</div>
-                        {client.metaAccountId && (
+                        {client.person ? (
+                          <div className="meta-id-tag" style={{ color: '#818cf8', borderColor: 'rgba(99, 102, 241, 0.3)', fontWeight: 500 }}>
+                            👤 {client.person}
+                          </div>
+                        ) : client.metaAccountId ? (
                           <div className="meta-id-tag">ID: {client.metaAccountId}</div>
-                        )}
+                        ) : null}
                       </div>
                       <button
                         className="btn-icon"

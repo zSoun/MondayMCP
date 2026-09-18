@@ -96,23 +96,13 @@ export const ClientModal: React.FC<ClientModalProps> = ({
               <input
                 className="form-input"
                 required
-                placeholder="Ex: E-commerce Alpha"
+                placeholder="Ex: Art Móveis"
                 value={formData.name || ''}
                 onChange={e => setFormData({ ...formData, name: e.target.value })}
               />
             </div>
 
             <div className="form-row">
-              <div className="form-group">
-                <label className="form-label">ID da Conta no Meta Ads</label>
-                <input
-                  className="form-input"
-                  placeholder="Ex: act_123456789"
-                  value={formData.metaAccountId || ''}
-                  onChange={e => setFormData({ ...formData, metaAccountId: e.target.value })}
-                />
-              </div>
-
               <div className="form-group">
                 <label className="form-label">Status da Recarga</label>
                 <select
@@ -126,6 +116,17 @@ export const ClientModal: React.FC<ClientModalProps> = ({
                   <option value="Pago / Aguardando Compensação">Pago / Aguardando Compensação</option>
                   <option value="Saldo Confirmado">Saldo Confirmado</option>
                 </select>
+              </div>
+
+              <div className="form-group">
+                <label className="form-label">Pessoa Responsável (Monday)</label>
+                <input
+                  className="form-input"
+                  disabled
+                  placeholder="Atribuído no Monday"
+                  value={formData.person || 'Não atribuído no Monday'}
+                  style={{ opacity: 0.8, cursor: 'not-allowed' }}
+                />
               </div>
             </div>
 
@@ -185,26 +186,6 @@ export const ClientModal: React.FC<ClientModalProps> = ({
                   onChange={e => setFormData({ ...formData, lastPixValue: e.target.value === '' ? 0 : parseFloat(e.target.value) || 0 })}
                 />
               </div>
-            </div>
-
-            <div className="form-group">
-              <label className="form-label">Código / Link do Pix</label>
-              <input
-                className="form-input"
-                placeholder="Link da fatura do Meta ou chave Pix Copia e Cola"
-                value={formData.pixCode}
-                onChange={e => setFormData({ ...formData, pixCode: e.target.value })}
-              />
-            </div>
-
-            <div className="form-group">
-              <label className="form-label">Anotações / Observações</label>
-              <textarea
-                className="form-textarea"
-                placeholder="Ex: Cliente costuma demorar 1 dia para pagar. Alavancar verba no fim de semana."
-                value={formData.notes}
-                onChange={e => setFormData({ ...formData, notes: e.target.value })}
-              />
             </div>
           </div>
 
