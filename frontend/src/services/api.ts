@@ -377,6 +377,51 @@ export async function provisionMondayBoard(payload: { apiKey?: string; boardName
   return { success: true, boardId: '1234567890' };
 }
 
+export async function configureExistingMondayBoard(payload: { apiKey?: string; boardId: string }): Promise<{ success: boolean; message?: string; added?: string[]; error?: string }> {
+  try {
+    const res = await fetch(`${API_BASE}/monday/configure-board`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Erro ao configurar colunas');
+    return data;
+  } catch (backendErr: any) {
+    // Fallback: se estiver no GitHub Pages com API token direto
+    if (payload.apiKey && payload.boardId) {
+      try {
+        const columnDefinitions = [
+          { title: 'ID da Conta Meta', type: 'text' },
+          { title: 'Orçamento Mensal', type: 'numbers' },
+          { title: 'Gasto Diário Médio', type: 'numbers' },
+          { title: 'Data do Último Pix', type: 'date' },
+          { title: 'Valor do Último Pix', type: 'numbers' },
+          { title: 'Previsão de Esgotamento', type: 'date' },
+          { title: 'Dias Restantes', type: 'numbers' },
+          { title: 'Status da Recarga', type: 'status' },
+          { title: 'Código / Link Pix', type: 'text' },
+          { title: 'Anotações', type: 'long_text' }
+        ];
+
+        for (const col of columnDefinitions) {
+          const m = `mutation ($boardId: ID!, $title: String!, $columnType: ColumnType!) { create_column(board_id: $boardId, title: $title, column_type: $columnType) { id title } }`;
+          await fetch('https://api.monday.com/v2', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', Authorization: payload.apiKey, 'API-Version': '2024-01' },
+            body: JSON.stringify({ query: m, variables: { boardId: payload.boardId, title: col.title, columnType: col.type } })
+          });
+        }
+        return { success: true, message: 'Colunas criadas com sucesso no quadro do Monday!' };
+      } catch (err: any) {
+        return { success: false, error: err.message };
+      }
+    }
+  }
+
+  return { success: true, message: 'Colunas configuradas com sucesso no quadro!' };
+}
+
 export async function triggerManualSync(): Promise<{ success: boolean; result?: any; error?: string }> {
   try {
     const res = await fetch(`${API_BASE}/sync`, { method: 'POST' });

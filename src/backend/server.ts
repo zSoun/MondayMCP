@@ -117,6 +117,39 @@ fastify.post<{ Body: { boardName?: string; apiKey?: string } }>('/api/monday/pro
   }
 });
 
+fastify.post<{ Body: { boardId?: string; apiKey?: string } }>('/api/monday/configure-board', async (request, reply) => {
+  const config = getConfig();
+  const apiKey = request.body?.apiKey || config.mondayApiKey;
+  const boardId = request.body?.boardId || config.mondayBoardId;
+  if (!apiKey) {
+    return reply.status(400).send({ error: 'Chave de API do Monday não informada.' });
+  }
+  if (!boardId) {
+    return reply.status(400).send({ error: 'Board ID não informado.' });
+  }
+
+  try {
+    const monday = new MondayService(apiKey);
+    const result = await monday.provisionExistingBoard(boardId);
+    
+    // Atualiza o boardId no .env se for diferente
+    if (boardId !== config.mondayBoardId) {
+      saveConfig({ mondayBoardId: boardId });
+    }
+
+    return {
+      success: true,
+      message: `Quadro configurado com sucesso! ${result.added.length} coluna(s) adicionada(s).`,
+      added: result.added,
+      existing: result.existing,
+      boardId,
+    };
+  } catch (err: any) {
+    fastify.log.error(err);
+    return reply.status(500).send({ error: err.message || 'Erro ao configurar colunas do quadro no Monday.com' });
+  }
+});
+
 // -------------------------------------------------------------
 // Clients CRUD & Balance
 // -------------------------------------------------------------

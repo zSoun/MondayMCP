@@ -105,6 +105,58 @@ export class MondayService {
   }
 
   /**
+   * Adiciona as colunas necessárias de tráfego a um quadro existente do Monday
+   */
+  async provisionExistingBoard(boardId: string): Promise<{ added: string[]; existing: string[] }> {
+    const currentColumns = await this.getBoardColumns(boardId);
+    const existingTitles = currentColumns.map(c => c.title.trim().toLowerCase());
+
+    const columnDefinitions = [
+      { title: 'ID da Conta Meta', type: 'text' },
+      { title: 'Orçamento Mensal', type: 'numbers' },
+      { title: 'Gasto Diário Médio', type: 'numbers' },
+      { title: 'Data do Último Pix', type: 'date' },
+      { title: 'Valor do Último Pix', type: 'numbers' },
+      { title: 'Previsão de Esgotamento', type: 'date' },
+      { title: 'Dias Restantes', type: 'numbers' },
+      { title: 'Status da Recarga', type: 'status' },
+      { title: 'Código / Link Pix', type: 'text' },
+      { title: 'Anotações', type: 'long_text' }
+    ];
+
+    const added: string[] = [];
+    const alreadyPresent: string[] = [];
+
+    for (const col of columnDefinitions) {
+      const match = existingTitles.find(t => t === col.title.toLowerCase() || t.includes(col.title.toLowerCase()));
+      if (match) {
+        alreadyPresent.push(col.title);
+      } else {
+        try {
+          const addColMutation = `
+            mutation ($boardId: ID!, $title: String!, $columnType: ColumnType!) {
+              create_column(board_id: $boardId, title: $title, column_type: $columnType) {
+                id
+                title
+              }
+            }
+          `;
+          await this.graphqlQuery(addColMutation, {
+            boardId,
+            title: col.title,
+            columnType: col.type
+          });
+          added.push(col.title);
+        } catch (err) {
+          console.warn(`Aviso ao criar coluna "${col.title}":`, err);
+        }
+      }
+    }
+
+    return { added, existing: alreadyPresent };
+  }
+
+  /**
    * Obtém a lista de colunas do quadro para mapeamento
    */
   async getBoardColumns(boardId: string): Promise<Array<{ id: string; title: string; type: string }>> {

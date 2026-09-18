@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { X, Check, Save, Layers, Mail, Calendar, Key, AlertCircle, Copy } from 'lucide-react';
-import { SettingsData, saveSettings, testMondayApiKey, provisionMondayBoard } from '../services/api';
+import { X, Check, Save, Layers, Mail, Calendar, Key, AlertCircle, Copy, Sliders } from 'lucide-react';
+import { SettingsData, saveSettings, testMondayApiKey, provisionMondayBoard, configureExistingMondayBoard } from '../services/api';
 
 interface SettingsModalProps {
   isOpen: boolean;
@@ -33,6 +33,9 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
 
   const [provisioning, setProvisioning] = useState(false);
   const [provisionResult, setProvisionResult] = useState<string | null>(null);
+
+  const [configuringBoard, setConfiguringBoard] = useState(false);
+  const [configBoardResult, setConfigBoardResult] = useState<string | null>(null);
 
   const [saving, setSaving] = useState(false);
   const [saveSuccess, setSaveSuccess] = useState(false);
@@ -91,6 +94,31 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
       setProvisionResult(`Erro ao criar quadro: ${err.message}`);
     } finally {
       setProvisioning(false);
+    }
+  };
+
+  const handleConfigureExistingBoard = async () => {
+    if (!boardId.trim()) {
+      alert('Por favor, informe o ID do Quadro primeiro.');
+      return;
+    }
+    setConfiguringBoard(true);
+    setConfigBoardResult(null);
+    try {
+      const res = await configureExistingMondayBoard({
+        apiKey: apiKey || undefined,
+        boardId: boardId.trim(),
+      });
+      if (res.success) {
+        setConfigBoardResult(res.message || 'Colunas criadas com sucesso no quadro do Monday!');
+        onRefreshSettings();
+      } else {
+        setConfigBoardResult(`Erro: ${res.error}`);
+      }
+    } catch (err: any) {
+      setConfigBoardResult(`Erro ao configurar colunas: ${err.message}`);
+    } finally {
+      setConfiguringBoard(false);
     }
   };
 
@@ -227,20 +255,36 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                     />
                   </div>
 
-                  <div style={{ marginTop: '10px' }}>
+                  <div style={{ marginTop: '12px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
                     <button
                       type="button"
                       className="btn btn-primary"
+                      onClick={handleConfigureExistingBoard}
+                      disabled={configuringBoard || !boardId.trim()}
+                    >
+                      <Sliders size={16} />
+                      {configuringBoard ? 'Configurando Colunas no Quadro...' : 'Configurar Colunas neste Quadro'}
+                    </button>
+
+                    <button
+                      type="button"
+                      className="btn btn-secondary"
                       onClick={handleProvisionBoard}
                       disabled={provisioning}
                     >
                       <Layers size={16} />
-                      {provisioning ? 'Criando Quadro e Colunas...' : 'Criar Quadro Dedicado no Monday (1 Clique)'}
+                      {provisioning ? 'Criando Quadro Novo...' : 'Ou Criar um Quadro Novo do Zero (1 Clique)'}
                     </button>
                   </div>
 
+                  {configBoardResult && (
+                    <div style={{ marginTop: '10px', fontSize: '0.85rem', color: '#34d399', background: 'rgba(16, 185, 129, 0.15)', padding: '8px 12px', borderRadius: '6px', border: '1px solid rgba(16, 185, 129, 0.3)' }}>
+                      {configBoardResult}
+                    </div>
+                  )}
+
                   {provisionResult && (
-                    <div style={{ marginTop: '10px', fontSize: '0.85rem', color: '#34d399' }}>
+                    <div style={{ marginTop: '10px', fontSize: '0.85rem', color: '#34d399', background: 'rgba(16, 185, 129, 0.15)', padding: '8px 12px', borderRadius: '6px', border: '1px solid rgba(16, 185, 129, 0.3)' }}>
                       {provisionResult}
                     </div>
                   )}
