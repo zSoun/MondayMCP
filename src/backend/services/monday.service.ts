@@ -226,6 +226,7 @@ export class MondayService {
       for (const cv of item.column_values) {
         const title = colMap[cv.id] || '';
         const textVal = cv.text ? cv.text.trim() : '';
+        if (!textVal) continue;
 
         if (title.includes('id da conta') || title.includes('meta')) {
           metaAccountId = textVal;
@@ -442,11 +443,28 @@ export class MondayService {
       }
     `;
 
-    await this.graphqlQuery(mutation, {
-      boardId,
-      itemId,
-      columnValues: JSON.stringify(columnValues)
-    });
+    if (Object.keys(columnValues).length > 0) {
+      await this.graphqlQuery(mutation, {
+        boardId,
+        itemId,
+        columnValues: JSON.stringify(columnValues)
+      });
+    }
+
+    if (updates.name && updates.name.trim()) {
+      const renameMutation = `
+        mutation ($boardId: ID!, $itemId: ID!, $name: String!) {
+          change_simple_column_value (board_id: $boardId, item_id: $itemId, column_id: "name", value: $name) {
+            id
+          }
+        }
+      `;
+      await this.graphqlQuery(renameMutation, {
+        boardId,
+        itemId,
+        name: updates.name.trim()
+      });
+    }
   }
 
   /**

@@ -61,10 +61,17 @@ export const ClientModal: React.FC<ClientModalProps> = ({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!formData.name?.trim()) {
+      alert('Por favor, informe o Nome da Empresa / Cliente.');
+      return;
+    }
     setSaving(true);
     try {
       await onSave(formData);
       onClose();
+    } catch (err: any) {
+      console.error('Erro ao salvar cliente:', err);
+      alert(`Erro ao salvar no Monday.com: ${err.message || 'Verifique a conexão'}`);
     } finally {
       setSaving(false);
     }
@@ -90,7 +97,7 @@ export const ClientModal: React.FC<ClientModalProps> = ({
                 className="form-input"
                 required
                 placeholder="Ex: E-commerce Alpha"
-                value={formData.name}
+                value={formData.name || ''}
                 onChange={e => setFormData({ ...formData, name: e.target.value })}
               />
             </div>
@@ -101,7 +108,7 @@ export const ClientModal: React.FC<ClientModalProps> = ({
                 <input
                   className="form-input"
                   placeholder="Ex: act_123456789"
-                  value={formData.metaAccountId}
+                  value={formData.metaAccountId || ''}
                   onChange={e => setFormData({ ...formData, metaAccountId: e.target.value })}
                 />
               </div>
@@ -110,7 +117,7 @@ export const ClientModal: React.FC<ClientModalProps> = ({
                 <label className="form-label">Status da Recarga</label>
                 <select
                   className="form-select"
-                  value={formData.status}
+                  value={formData.status || 'Saldo Saudável'}
                   onChange={e => setFormData({ ...formData, status: e.target.value as any })}
                 >
                   <option value="Saldo Saudável">Saldo Saudável</option>
@@ -124,19 +131,19 @@ export const ClientModal: React.FC<ClientModalProps> = ({
 
             <div className="form-row">
               <div className="form-group">
-                <label className="form-label">Orçamento Mensal (R$) *</label>
+                <label className="form-label">Orçamento Mensal (R$)</label>
                 <input
                   type="number"
                   step="0.01"
                   className="form-input"
-                  required
-                  value={formData.monthlyBudget || ''}
+                  placeholder="Ex: 3000"
+                  value={formData.monthlyBudget !== undefined && formData.monthlyBudget !== null ? formData.monthlyBudget : ''}
                   onChange={e => {
-                    const budget = parseFloat(e.target.value) || 0;
+                    const val = e.target.value;
+                    const budget = val === '' ? 0 : parseFloat(val) || 0;
                     setFormData({
                       ...formData,
                       monthlyBudget: budget,
-                      // Se gasto diário for 0 ou default, sugere budget / 30
                       dailySpend: formData.dailySpend ? formData.dailySpend : Math.round(budget / 30),
                     });
                   }}
@@ -150,8 +157,8 @@ export const ClientModal: React.FC<ClientModalProps> = ({
                   step="0.01"
                   className="form-input"
                   placeholder="Se vazio, calcula Orçamento / 30"
-                  value={formData.dailySpend || ''}
-                  onChange={e => setFormData({ ...formData, dailySpend: parseFloat(e.target.value) || 0 })}
+                  value={formData.dailySpend !== undefined && formData.dailySpend !== null ? formData.dailySpend : ''}
+                  onChange={e => setFormData({ ...formData, dailySpend: e.target.value === '' ? 0 : parseFloat(e.target.value) || 0 })}
                 />
               </div>
             </div>
@@ -162,7 +169,7 @@ export const ClientModal: React.FC<ClientModalProps> = ({
                 <input
                   type="date"
                   className="form-input"
-                  value={formData.lastPixDate}
+                  value={formData.lastPixDate || ''}
                   onChange={e => setFormData({ ...formData, lastPixDate: e.target.value })}
                 />
               </div>
@@ -173,8 +180,9 @@ export const ClientModal: React.FC<ClientModalProps> = ({
                   type="number"
                   step="0.01"
                   className="form-input"
-                  value={formData.lastPixValue || ''}
-                  onChange={e => setFormData({ ...formData, lastPixValue: parseFloat(e.target.value) || 0 })}
+                  placeholder="Ex: 500"
+                  value={formData.lastPixValue !== undefined && formData.lastPixValue !== null ? formData.lastPixValue : ''}
+                  onChange={e => setFormData({ ...formData, lastPixValue: e.target.value === '' ? 0 : parseFloat(e.target.value) || 0 })}
                 />
               </div>
             </div>

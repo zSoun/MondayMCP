@@ -258,6 +258,7 @@ export async function fetchClients(): Promise<{ clients: ClientData[]; needsConf
       for (const cv of item.column_values) {
         const title = colMap[cv.id] || '';
         const textVal = cv.text ? cv.text.trim() : '';
+        if (!textVal) continue;
 
         if (title.includes('id da conta') || title.includes('meta')) {
           metaAccountId = textVal;
@@ -491,6 +492,17 @@ export async function updateClient(id: string, updates: Partial<ClientData>): Pr
         }
       `;
       await callMondayApi(mutation, { boardId, itemId: id, columnValues: JSON.stringify(columnValues) }, apiKey);
+    }
+
+    if (updates.name && updates.name.trim()) {
+      const renameMutation = `
+        mutation ($boardId: ID!, $itemId: ID!, $name: String!) {
+          change_simple_column_value (board_id: $boardId, item_id: $itemId, column_id: "name", value: $name) {
+            id
+          }
+        }
+      `;
+      await callMondayApi(renameMutation, { boardId, itemId: id, name: updates.name.trim() }, apiKey);
     }
 
     return { success: true };

@@ -76,9 +76,15 @@ export const App: React.FC = () => {
 
   const handleSaveClient = async (data: Partial<ClientData>) => {
     if (editingClient) {
-      await updateClient(editingClient.id, data);
+      const res = await updateClient(editingClient.id, data);
+      if (!res.success) {
+        throw new Error(res.error || 'Falha ao atualizar no Monday.com');
+      }
     } else {
-      await createClient(data);
+      const res = await createClient(data);
+      if (!res.success) {
+        throw new Error(res.error || 'Falha ao cadastrar no Monday.com');
+      }
     }
     await loadData();
   };
