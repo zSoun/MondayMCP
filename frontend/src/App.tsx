@@ -55,6 +55,7 @@ export const App: React.FC = () => {
   };
 
   useEffect(() => {
+    localStorage.removeItem('mondaymcp_clients');
     loadData();
   }, []);
 
@@ -197,6 +198,39 @@ export const App: React.FC = () => {
         {/* Visualizações Principais */}
         {!needsConfig && (
           <>
+            {clients.length === 0 && !loading && (
+              <div
+                style={{
+                  background: 'rgba(99, 102, 241, 0.08)',
+                  border: '1px dashed rgba(99, 102, 241, 0.3)',
+                  borderRadius: 'var(--radius-md)',
+                  padding: '16px 20px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  marginBottom: '10px',
+                }}
+              >
+                <div>
+                  <div style={{ fontWeight: 700, color: '#ffffff', fontSize: '0.95rem' }}>
+                    Quadro conectado ao Monday (ID: {settings?.mondayBoardId || '18431725532'})
+                  </div>
+                  <div style={{ fontSize: '0.825rem', color: 'var(--text-secondary)' }}>
+                    Nenhuma conta cadastrada ainda neste quadro. Clique em "+ Novo Cliente" para adicionar ou insira itens diretamente no Monday.com!
+                  </div>
+                </div>
+                <button
+                  className="btn btn-primary"
+                  onClick={() => {
+                    setEditingClient(null);
+                    setIsClientModalOpen(true);
+                  }}
+                >
+                  + Novo Cliente
+                </button>
+              </div>
+            )}
+
             {activeTab === 'calendar' ? (
               <CalendarView
                 clients={clients}
