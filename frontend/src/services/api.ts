@@ -386,9 +386,25 @@ export async function createClient(client: Partial<ClientData>): Promise<{ succe
     const notesCol = findCol(t => t.includes('anotações') || t.includes('anotacoes') || t.includes('obs'));
     if (notesCol && client.notes) columnValues[notesCol] = { text: client.notes };
 
+    // Calcula previsão de esgotamento e dias restantes se aplicável
+    if (client.lastPixDate && client.lastPixValue) {
+      const forecast = calculateForecast(
+        client.lastPixDate,
+        client.lastPixValue,
+        client.monthlyBudget || 3000,
+        client.dailySpend,
+        client.status || 'Saldo Saudável'
+      );
+      const esgotamentoCol = findCol(t => t.includes('esgotamento') || t.includes('previsão') || t.includes('previsao'));
+      if (esgotamentoCol && forecast.depletionDate) columnValues[esgotamentoCol] = { date: forecast.depletionDate };
+
+      const diasCol = findCol(t => t.includes('dias restantes'));
+      if (diasCol) columnValues[diasCol] = forecast.remainingDays.toString();
+    }
+
     const mutation = `
       mutation ($boardId: ID!, $itemName: String!, $columnValues: JSON!) {
-        create_item (board_id: $boardId, item_name: $itemName, column_values: $columnValues) {
+        create_item (board_id: $boardId, item_name: $itemName, column_values: $columnValues, create_labels_if_missing: true) {
           id
         }
       }
@@ -470,6 +486,14 @@ export async function updateClient(id: string, updates: Partial<ClientData>): Pr
       const colId = findCol(t => t.includes('valor') && t.includes('pix'));
       if (colId) columnValues[colId] = updates.lastPixValue.toString();
     }
+    if (updates.depletionDate !== undefined) {
+      const colId = findCol(t => t.includes('esgotamento') || t.includes('previsão') || t.includes('previsao'));
+      if (colId) columnValues[colId] = { date: updates.depletionDate };
+    }
+    if (updates.remainingDays !== undefined) {
+      const colId = findCol(t => t.includes('dias restantes'));
+      if (colId) columnValues[colId] = updates.remainingDays.toString();
+    }
     if (updates.status !== undefined) {
       const colId = findCol(t => t.includes('status'));
       if (colId) columnValues[colId] = { label: updates.status };
@@ -483,10 +507,34 @@ export async function updateClient(id: string, updates: Partial<ClientData>): Pr
       if (colId) columnValues[colId] = { text: updates.notes };
     }
 
+    // Se informou pix/orçamento, recalcula previsão e esgotamento
+    if (updates.lastPixDate && updates.lastPixValue) {
+      const forecast = calculateForecast(
+        updates.lastPixDate,
+        updates.lastPixValue,
+        updates.monthlyBudget || 3000,
+        updates.dailySpend,
+        updates.status || 'Saldo Saudável'
+      );
+      const colEsgotamento = findCol(t => t.includes('esgotamento') || t.includes('previsão') || t.includes('previsao'));
+      if (colEsgotamento && forecast.depletionDate) {
+        columnValues[colEsgotamento] = { date: forecast.depletionDate };
+      }
+      const colDias = findCol(t => t.includes('dias restantes'));
+      if (colDias) {
+        columnValues[colDias] = forecast.remainingDays.toString();
+      }
+    }
+
     if (Object.keys(columnValues).length > 0) {
       const mutation = `
         mutation ($boardId: ID!, $itemId: ID!, $columnValues: JSON!) {
-          change_multiple_column_values (board_id: $boardId, item_id: $itemId, column_values: $columnValues) {
+          change_multiple_column_values (
+            board_id: $boardId,
+            item_id: $itemId,
+            column_values: $columnValues,
+            create_labels_if_missing: true
+          ) {
             id
           }
         }
@@ -541,8 +589,13 @@ export async function updateClientStatus(id: string, status: string): Promise<{ 
 
     if (statusCol) {
       const mutation = `
-        mutation ($boardId: ID!, $itemId: ID!, $columnId: String!, $value: JSON!) {
-          change_column_value (board_id: $boardId, item_id: $itemId, column_id: $columnId, value: $value) {
+        mutation ($boardId: ID!, $itemId: ID!, $columnValues: JSON!) {
+          change_multiple_column_values (
+            board_id: $boardId,
+            item_id: $itemId,
+            column_values: $columnValues,
+            create_labels_if_missing: true
+          ) {
             id
           }
         }
@@ -552,8 +605,7 @@ export async function updateClientStatus(id: string, status: string): Promise<{ 
         {
           boardId,
           itemId: id,
-          columnId: statusCol.id,
-          value: JSON.stringify({ label: status }),
+          columnValues: JSON.stringify({ [statusCol.id]: { label: status } }),
         },
         apiKey
       );

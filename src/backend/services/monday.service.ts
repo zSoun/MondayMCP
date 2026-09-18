@@ -334,7 +334,7 @@ export class MondayService {
 
     const mutation = `
       mutation ($boardId: ID!, $itemName: String!, $columnValues: JSON!) {
-        create_item (board_id: $boardId, item_name: $itemName, column_values: $columnValues) {
+        create_item (board_id: $boardId, item_name: $itemName, column_values: $columnValues, create_labels_if_missing: true) {
           id
         }
       }
@@ -358,8 +358,13 @@ export class MondayService {
     if (!statusCol) return;
 
     const mutation = `
-      mutation ($boardId: ID!, $itemId: ID!, $columnId: String!, $value: JSON!) {
-        change_column_value (board_id: $boardId, item_id: $itemId, column_id: $columnId, value: $value) {
+      mutation ($boardId: ID!, $itemId: ID!, $columnValues: JSON!) {
+        change_multiple_column_values (
+          board_id: $boardId,
+          item_id: $itemId,
+          column_values: $columnValues,
+          create_labels_if_missing: true
+        ) {
           id
         }
       }
@@ -368,8 +373,7 @@ export class MondayService {
     await this.graphqlQuery(mutation, {
       boardId,
       itemId,
-      columnId: statusCol.id,
-      value: JSON.stringify({ label: status })
+      columnValues: JSON.stringify({ [statusCol.id]: { label: status } })
     });
   }
 
@@ -437,7 +441,12 @@ export class MondayService {
 
     const mutation = `
       mutation ($boardId: ID!, $itemId: ID!, $columnValues: JSON!) {
-        change_multiple_column_values (board_id: $boardId, item_id: $itemId, column_values: $columnValues) {
+        change_multiple_column_values (
+          board_id: $boardId,
+          item_id: $itemId,
+          column_values: $columnValues,
+          create_labels_if_missing: true
+        ) {
           id
         }
       }
