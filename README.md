@@ -1,5 +1,7 @@
 # MondayMCP • Sistema de Gestão de Saldo Meta Ads
 
+> 🌐 **Acesse a versão online no GitHub Pages:** [https://zsoun.github.io/MondayMCP/](https://zsoun.github.io/MondayMCP/)
+
 Sistema moderno e isolado para monitoramento, previsão de esgotamento de saldo e notificação de recargas Pix em contas de anúncios do **Meta Ads**, desenvolvido para gestores de tráfego e equipes de performance.
 
 Integrado diretamente com a **API v2 do Monday.com**, servidor **MCP (Model Context Protocol)** para inteligência artificial, sincronização com **Google Calendar** (feed iCal `.ics`) e disparos de alertas por **e-mail** para toda a equipe unificada.
